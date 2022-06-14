@@ -39,9 +39,7 @@ const MoteCamComponent = () => {
                         />
                 }
                 <Box my={4} id="video-frame" className={styles.videoFrame} display={ moteCam.isReady === true ? 'block' : 'none' }>
-                    {/* <video ref={moteCam.videoRef} playsInline className="video-webcam"></video>
-                    <canvas ref={moteCam.canvasRef} id="canvas" className="draw-canvas" /> */}
-                    <video ref={moteCam.videoRef} playsInline className={styles.videoWebcam}></video>
+\                    <video ref={moteCam.videoRef} playsInline className={styles.videoWebcam}></video>
                     <canvas ref={moteCam.canvasRef} id="canvas" className={styles.drawCanvas} />
                 </Box>
                 <Button my={4} mx='auto' size='lg' w='80%' colorScheme='blue' onClick={moteCam.startAndStop}>{ moteCam.isStarted ? "Stop" : "Start" }</Button>

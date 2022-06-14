@@ -113,23 +113,6 @@ const useMOTECam = (): MoteCamType => {
             const constraints = {
                 audio: false,
                 video: true,
-                // audio: false,
-                // video: {
-                //     facingMode: 'user',
-                //     width: {
-                //         ideal: 1280,
-                //     },
-                //     height: {
-                //         ideal: 1280,
-                //     },
-                // },
-
-                // advanced : [
-                //     { 
-                //         brightness: 10,
-                //         // contrast: 100,
-                //     }
-                // ]
             };
             let stream: MediaStream
             try {
@@ -149,17 +132,8 @@ const useMOTECam = (): MoteCamType => {
                 throw new Error("Camera Error: MediaStream Empty");
             }
             const track = stream.getVideoTracks()[0];
-            // 明るさ調整できるか？
             console.log('******* Brightness Check');
-            // const supported = navigator.mediaDevices.getSupportedConstraints();
-            // console.log(supported);
             console.log(track.getCapabilities());            
-            // settings.brightness = 0.1
-            // constraint.brightness = {exact: 100}
-            // track.applyConstraints(constraint)
-            // track.applyConstraints({ advanced : [{ zoom: 100 }] });
-            // track.applyConstraints({ advanced : [{ brightness: 60, contrast: 70 }] });
-            // ********
             track.applyConstraints(
                 {
                     audio: false,
@@ -186,7 +160,7 @@ const useMOTECam = (): MoteCamType => {
             //
             const settings = track.getSettings();
             if (settings.deviceId){
-                // プロパティ削除、間接的なメモリ開放
+                // Delete property / Release memory indirectly
                 delete settings.deviceId;
             }
             if (settings.groupId){
@@ -195,9 +169,8 @@ const useMOTECam = (): MoteCamType => {
             if (settings.aspectRatio){
               console.log(`settings.aspectRatio >> ${settings.aspectRatio}`);             
               settings.aspectRatio = Math.trunc(100 * settings.aspectRatio) / 100;
-              // settings.aspectRatio = 1.0;
             }
-            // videoサイズでcanvasを設定
+            // Canvas Settings
             canvas.width = settings.width ? settings.width : 0
             canvas.height = settings.height ? settings.height : 0
             canvas.style.width = "100%"     
@@ -207,8 +180,8 @@ const useMOTECam = (): MoteCamType => {
           
             video.onloadeddata = async () => {
                 video.play();
-                // 反転
                 const ctx = canvas.getContext('2d');
+                // Invert Canvas
                 ctx?.scale(-1,1);
                 ctx?.translate(-canvas.width, 0);          
                 await detectHandler()
@@ -233,12 +206,11 @@ const useMOTECam = (): MoteCamType => {
                                         .withAgeAndGender()
                 const fps = 1000 / (performance.now() - t0);
                 console.log('Did Detect Video');
-                drawFace(detectedFace, fps.toLocaleString());
+                // Draw Area
+                drawFaceRect(detectedFace, fps.toLocaleString());                
                 // Check Detected Face
                 checkFace(detectedFace)
-
-                // 渡した関数が最適なタイミングで処理されるHack
-                // https://blog.leap-in.com/use-requestanimtionframe/
+                // For Performance
                 requestAnimationFrame(
                     () => detectHandler()
                 );
@@ -247,7 +219,7 @@ const useMOTECam = (): MoteCamType => {
     }
 
     // Draw
-    const drawFace = (face: any, fps: string ) => {
+    const drawFaceRect = (face: any, fps: string ) => {
         if( canvasRef.current && face ){
             const canvas = canvasRef.current as HTMLCanvasElement
             const ctx = canvas.getContext('2d');
@@ -270,13 +242,10 @@ const useMOTECam = (): MoteCamType => {
                 ctx.rect(face.detection.box.x, face.detection.box.y, face.detection.box.width, face.detection.box.height);
                 ctx.stroke();
                 ctx.globalAlpha = 1;
-                // const expression = face.expressions.sort((a, b) => Object.values(a)[0] - Object.values(b)[0]);
-                // const expression = Object.entries(face.expressions).sort((a, b) => b[1] - a[1]);
                 const expression: any = Object.entries(face.expressions).sort((a:any, b:any) => b[1] - a[1]);
             
                 ctx.fillStyle = 'black';
                 ctx.fillText(`gender: ${Math.round(100 * face.genderProbability)}% ${face.gender}`, face.detection.box.x, face.detection.box.y - 59);
-                // ctx.fillText(`expression: ${Math.round(100 * expression[0][1])}% ${expression[0][0]}`, face.detection.box.x, face.detection.box.y - 41);
                 ctx.fillText(`expression: ${Math.round(100 * expression[0][1])}% ${expression[0][0]}`, face.detection.box.x, face.detection.box.y - 41);
                 ctx.fillText(`age: ${Math.round(face.age)} years`, face.detection.box.x, face.detection.box.y - 23);
                 ctx.fillText(`roll:${face.angle.roll.toFixed(3)} pitch:${face.angle.pitch.toFixed(3)} yaw:${face.angle.yaw.toFixed(3)}`, face.detection.box.x, face.detection.box.y - 5);
@@ -302,13 +271,13 @@ const useMOTECam = (): MoteCamType => {
 
     }
 
-    // Checking MOTE Face
+    // Check MOTE Face
     const checkFace = (face: any) => {
         if( face && canvasRef.current ){
             const canvas = canvasRef.current as HTMLCanvasElement
 
             // // 顔が真ん中にきてるか？
-            const facePosition = checkCenterFacing(
+            const facePosition = checkFaceInCenter(
                 {w:canvas.width, h:canvas.height},
                 face.detection.box
             )
@@ -323,7 +292,7 @@ const useMOTECam = (): MoteCamType => {
             const faceExp = checkGoodExpression( face.expressions)
 
             // 年齢
-            const faceAgeMsg = expectedAgeMessage( face.age )
+            const faceAgeMsg = expectedAge( face.age )
 
             setMoteCamAdvice({
                 expression:faceExp,
@@ -342,8 +311,8 @@ const useMOTECam = (): MoteCamType => {
         }
     }
 
-    // 顔がだいたい真ん中にあるか？
-    const checkCenterFacing = (frame: {w: number, h: number}, facebox: {x: number, y: number, width: number, height: number}): MoteCamAdviceMessage => {
+    // Face in the center ?
+    const checkFaceInCenter = (frame: {w: number, h: number}, facebox: {x: number, y: number, width: number, height: number}): MoteCamAdviceMessage => {
 
         // frameの中心
         const frameCenter:{x: number, y: number} = {x: frame.w/2, y: frame.h/2}
@@ -416,7 +385,7 @@ const useMOTECam = (): MoteCamType => {
 
     }
     
-    // 顔の大きさ
+    // Face Sizing
     const checkFaceSize = (frame: {w: number, h: number}, facebox: {x: number, y: number, width: number, height: number} ): MoteCamAdviceMessage => {
         // Frame を占める割合で判定する
         const frameArea = frame.w * frame.h
@@ -453,12 +422,12 @@ const useMOTECam = (): MoteCamType => {
         }
     }
     
-    // 表情と年齢
+    // Expression and Age
     type FaceExp = {
         expression: string;
         predict: number;
     }
-    // 表情
+    // Expression
     // angry: 0.0001337282155873254
     // disgusted: 3.1885437579148856e-7
     // fearful: 1.3430851986129255e-9
@@ -506,7 +475,7 @@ const useMOTECam = (): MoteCamType => {
     }
 
     // 年齢
-    const expectedAgeMessage = ( age: number ): MoteCamAdviceMessage => {
+    const expectedAge = ( age: number ): MoteCamAdviceMessage => {
         const ageMsg = `${Math.round(age)}歳くらいに見えますよ`
         console.log(ageMsg);
         return {
