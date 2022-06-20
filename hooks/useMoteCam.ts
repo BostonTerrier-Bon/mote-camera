@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, RefObject } from "react";
 import * as faceapi from '@vladmandic/face-api';
 import { MoteCamAdviceType, MoteCamAdviceMessage } from "../component/MoteCamMessage";
 import { speakMessage } from "../hooks/useSpeech";
-
+import { useLocale } from "../hooks/useLocale";
 
 function str(json: any) {
     let text = '<font color="lightblue">';
@@ -41,16 +41,17 @@ const useMOTECam = (): MoteCamType => {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const photoRef = useRef<HTMLImageElement>(null)
 
+    const { locale, localizedStrings, languageCode } = useLocale()
 
     const startMoteCam = async () => {
 
 
         if( isStarted ){
             stopMoteCam()
-            speakMessage('撮影を終了します')
+            speakMessage(`${localizedStrings.END_SHOOTING}`, languageCode)
             return
         }
-        speakMessage('撮影を開始します')
+        speakMessage(`${localizedStrings.START_SHOOTING}`, languageCode)
 
         setIsStarted(true)
         // TensorFlow
@@ -305,7 +306,7 @@ const useMOTECam = (): MoteCamType => {
                 // Enough to Shot
                 console.log('Shot Photo');
                 setIsTakenPhoto(true)
-                speakMessage('モッテモテ写真が撮影出来ました')
+                speakMessage(`${localizedStrings.PICTURE_DID_TAKE}`, languageCode)
                 takePhoto()            
             }
         }
@@ -362,20 +363,20 @@ const useMOTECam = (): MoteCamType => {
         // const msgBox = document.getElementById('face_position');
         let msg = ''
         if( isJust ){
-            msg = 'ちょうど良いです😀'
+            msg = localizedStrings.GUIDE_MSG_POSITION_GOOD
         }
     
         if( isTooUpper ){
-            msg = 'もう少しシタですね'  
+            msg = localizedStrings.GUIDE_MSG_POSITION_TOO_UPPER  
         }else if( isTooDown ){
-            msg = 'もう少しウエですね'
+            msg = localizedStrings.GUIDE_MSG_POSITION_TOO_LOWER
         }
     
         // Canvas左右反転させているので逆
         if( isTooRight ){
-            msg = 'もう少し右ですね'
+            msg = localizedStrings.GUIDE_MSG_POSITION_TOO_RIGHT
         }else if( isTooLeft ){
-            msg = 'もう少し左ですね'
+            msg = localizedStrings.GUIDE_MSG_POSITION_TOO_LEFT
         }
     
         return {
@@ -401,19 +402,15 @@ const useMOTECam = (): MoteCamType => {
         let isSufficient = (lowRatio <= ratio && ratio <= highRatio)
         let tooSmall = (lowRatio > ratio)
         let tooBig = (ratio > highRatio)
-        // console.log(`小さすぎないか？: ${lowRatio <= ratio}`);
-        // console.log(`大きすぎないか？: ${ratio <= highRatio}`);
         let msg = ""
         if( isSufficient ){
-            msg = `ちょうど良い顔の大きさです🙆: ${Math.floor(ratio*100)}%`
+            msg = `${localizedStrings.GUIDE_MSG_SIZE_GOOD}: ${Math.floor(ratio*100)}%`
         }else if( tooSmall ){
-            // msg = `顔が小さすぎます。もう少しカメラに近づきましょう: ${Math.floor(ratio*100)}%`
-            msg = `顔が小さすぎます。もう少しカメラに近づきましょう`
+            msg = `${localizedStrings.GUIDE_MSG_SIZE_TOO_SMALL}`
         }else if( tooBig ){
-            // msg = `顔が大きすぎます。もう少しカメラから離れましょう: ${Math.floor(ratio*100)}%`
-            msg = `顔が大きすぎます。もう少しカメラから離れましょう`
+            msg = `${localizedStrings.GUIDE_MSG_SIZE_TOO_BIG}`
         }else{
-            msg = `？？: ${Math.floor(ratio*100)}%`
+            msg = `??: ${Math.floor(ratio*100)}%`
         }
 
         return {
@@ -454,16 +451,14 @@ const useMOTECam = (): MoteCamType => {
         let expMsg = ""
         switch (sorted[0].expression) {
         case "happy":
-            expMsg = '良い表情です👍'
+            expMsg = localizedStrings.GUIDE_MSG_EXP_GOOD
             isGood = true
             break;
         case "neutral":
-            // expMsg = '表情が少し固いですね😥'
-            expMsg = '表情がちょっとかたいです'
+            expMsg = localizedStrings.GUIDE_MSG_EXP_NUETRAL
             break;  
         default:
-            // expMsg = 'もっとリラックス😊'
-            expMsg = 'もっとリラックスしてください'
+            expMsg = localizedStrings.GUIDE_MSG_EXP_OTHERS
             break;
         }
         console.log(expMsg);
@@ -476,7 +471,8 @@ const useMOTECam = (): MoteCamType => {
 
     // 年齢
     const expectedAge = ( age: number ): MoteCamAdviceMessage => {
-        const ageMsg = `${Math.round(age)}歳くらいに見えますよ`
+        // const ageMsg = `${Math.round(age)}歳くらいに見えますよ`
+        const ageMsg = localizedStrings.GUIDE_MSG_AGE_LOOKLIKE.replace('%age', `${Math.round(age)}`)
         console.log(ageMsg);
         return {
             fulfilled: true,

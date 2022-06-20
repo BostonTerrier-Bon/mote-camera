@@ -1,9 +1,11 @@
 import { useEffect } from "react";
 import { MoteCamAdviceMessage } from "../component/MoteCamMessage";
+import { useLocale } from "../hooks/useLocale";
 
 
 const useSpeech = ( messages: MoteCamAdviceMessage[] ) => {
 
+    const { languageCode } = useLocale()
 
     useEffect( () => {
 
@@ -32,17 +34,18 @@ const useSpeech = ( messages: MoteCamAdviceMessage[] ) => {
             speechSynthesis.cancel();//chromeバグ用  
             const utterance = new SpeechSynthesisUtterance();
             utterance.text = message;
-            utterance.lang = 'ja-JP';
+            utterance.lang = languageCode;
             speechSynthesis.speak(utterance)
         }  
     }
 }
 
-const speakMessage = ( message: string ) => {
+const speakMessage = ( message: string, langCode: string ) => {
+
   speechSynthesis.cancel();//chromeバグ用  
   const utterance = new SpeechSynthesisUtterance();
   utterance.text = message;
-  utterance.lang = 'ja-JP';
+  utterance.lang = langCode;
   speechSynthesis.speak(utterance)
 }
 
