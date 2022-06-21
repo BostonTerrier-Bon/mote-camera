@@ -1,19 +1,11 @@
 import { useState, useEffect, useRef, RefObject } from "react";
 import * as faceapi from '@vladmandic/face-api';
+import { DetectSingleFaceTask } from '@vladmandic/face-api/src/globalApi/DetectFacesTasks';
+import { PredictSingleFaceExpressionsTask } from '@vladmandic/face-api/src/globalApi/PredictFaceExpressionsTask';
 import { MoteCamAdviceType, MoteCamAdviceMessage } from "../component/MoteCamMessage";
 import { speakMessage } from "../hooks/useSpeech";
 import { useLocale } from "../hooks/useLocale";
-
-function str(json: any) {
-    let text = '<font color="lightblue">';
-    text += json ? JSON.stringify(json).replace(/{|}|"|\[|\]/g, '').replace(/,/g, ', ') : '';
-    text += '</font>';
-    return text;
-}
-
-function log(...txt: any[]) {
-    console.log(...txt);
-}
+import { showDebuggingRect } from "../logic/debug";
 
 const MODEL_PATH = '/model'
 const detectorOptions = new faceapi.TinyFaceDetectorOptions();
@@ -100,7 +92,7 @@ const useMOTECam = (): MoteCamType => {
       
         // check tf engine state
         // @ts-ignore
-        log(`Models loaded: ${str(faceapi.tf.engine().state.numTensors)} tensors`);
+        // log(`Models loaded: ${str(faceapi.tf.engine().state.numTensors)} tensors`);
     }
 
     // Setup Camera
@@ -133,8 +125,8 @@ const useMOTECam = (): MoteCamType => {
                 throw new Error("Camera Error: MediaStream Empty");
             }
             const track = stream.getVideoTracks()[0];
-            console.log('******* Brightness Check');
-            console.log(track.getCapabilities());            
+            // console.log('******* Brightness Check');
+            // console.log(track.getCapabilities());            
             track.applyConstraints(
                 {
                     audio: false,
@@ -156,8 +148,8 @@ const useMOTECam = (): MoteCamType => {
 
             // console.log(applied);
             const constraint = track.getConstraints()
-            console.log(constraint);
-            console.log('Brightness Check *************');            
+            // console.log(constraint);
+            // console.log('Brightness Check *************');            
             //
             const settings = track.getSettings();
             if (settings.deviceId){
@@ -168,7 +160,7 @@ const useMOTECam = (): MoteCamType => {
                 delete settings.groupId;
             }
             if (settings.aspectRatio){
-              console.log(`settings.aspectRatio >> ${settings.aspectRatio}`);             
+            //   console.log(`settings.aspectRatio >> ${settings.aspectRatio}`);             
               settings.aspectRatio = Math.trunc(100 * settings.aspectRatio) / 100;
             }
             // Canvas Settings
@@ -176,8 +168,8 @@ const useMOTECam = (): MoteCamType => {
             canvas.height = settings.height ? settings.height : 0
             canvas.style.width = "100%"     
             canvas.style.height = "100%"     
-            log(`Camera active: ${track.label}`); // ${str(constraints)}
-            log(`Camera settings: ${str(settings)}`);
+            // log(`Camera active: ${track.label}`); // ${str(constraints)}
+            // log(`Camera settings: ${str(settings)}`);
           
             video.onloadeddata = async () => {
                 video.play();
@@ -198,17 +190,17 @@ const useMOTECam = (): MoteCamType => {
             const video = videoRef.current as HTMLVideoElement
             if( !video.paused ){
                 const t0 = performance.now();
-                console.log(`Detect Video W: ${video.width}`);
-                console.log(`Detect Video H: ${video.height}`);
+                // console.log(`Detect Video W: ${video.width}`);
+                // console.log(`Detect Video H: ${video.height}`);
                 const detectedFace = await faceapi
                                         .detectSingleFace(video, detectorOptions)
                                         .withFaceLandmarks()
                                         .withFaceExpressions()
                                         .withAgeAndGender()
                 const fps = 1000 / (performance.now() - t0);
-                console.log('Did Detect Video');
-                // Draw Area
-                drawFaceRect(detectedFace, fps.toLocaleString());                
+                // console.log('Did Detect Video');
+                // Debugging Draw Area
+                showDebuggingRect(detectedFace, fps.toLocaleString(), canvasRef.current)
                 // Check Detected Face
                 checkFace(detectedFace)
                 // For Performance
@@ -218,62 +210,9 @@ const useMOTECam = (): MoteCamType => {
             }
         }
     }
-
-    // Draw
-    const drawFaceRect = (face: any, fps: string ) => {
-        if( canvasRef.current && face ){
-            const canvas = canvasRef.current as HTMLCanvasElement
-            const ctx = canvas.getContext('2d');
-            if( ctx ){
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.font = 'small-caps 20px "Segoe UI"';
-                ctx.fillStyle = 'white';
-                ctx.fillText(`FPS: ${fps}`, 10, 25);          
-                console.log('Detect Face');  
-                console.log(face);
     
-                // if( face === undefined ) return;
-    
-                // Drawing Frames
-                ctx.lineWidth = 3;
-                ctx.strokeStyle = 'deepskyblue';
-                ctx.fillStyle = 'deepskyblue';
-                ctx.globalAlpha = 0.6;
-                ctx.beginPath();
-                ctx.rect(face.detection.box.x, face.detection.box.y, face.detection.box.width, face.detection.box.height);
-                ctx.stroke();
-                ctx.globalAlpha = 1;
-                const expression: any = Object.entries(face.expressions).sort((a:any, b:any) => b[1] - a[1]);
-            
-                ctx.fillStyle = 'black';
-                ctx.fillText(`gender: ${Math.round(100 * face.genderProbability)}% ${face.gender}`, face.detection.box.x, face.detection.box.y - 59);
-                ctx.fillText(`expression: ${Math.round(100 * expression[0][1])}% ${expression[0][0]}`, face.detection.box.x, face.detection.box.y - 41);
-                ctx.fillText(`age: ${Math.round(face.age)} years`, face.detection.box.x, face.detection.box.y - 23);
-                ctx.fillText(`roll:${face.angle.roll.toFixed(3)} pitch:${face.angle.pitch.toFixed(3)} yaw:${face.angle.yaw.toFixed(3)}`, face.detection.box.x, face.detection.box.y - 5);
-                ctx.fillStyle = 'lightblue';
-                ctx.fillText(`gender: ${Math.round(100 * face.genderProbability)}% ${face.gender}`, face.detection.box.x, face.detection.box.y - 60);
-                ctx.fillText(`expression: ${Math.round(100 * expression[0][1])}% ${expression[0][0]}`, face.detection.box.x, face.detection.box.y - 42);
-                ctx.fillText(`age: ${Math.round(face.age)} years`, face.detection.box.x, face.detection.box.y - 24);
-                ctx.fillText(`roll:${face.angle.roll.toFixed(3)} pitch:${face.angle.pitch.toFixed(3)} yaw:${face.angle.yaw.toFixed(3)}`, face.detection.box.x, face.detection.box.y - 6);
-                // draw face points for each face
-                ctx.globalAlpha = 0.8;
-                ctx.fillStyle = 'lightblue';
-    
-                // Aim
-                ctx.beginPath();
-                const rectW = 400
-                const rectH = 400
-                ctx.rect((canvas.width - rectW)/2, (canvas.height - rectH)/2, rectW, rectH);
-                ctx.stroke();
-            }
-
-
-        }
-
-    }
-
     // Check MOTE Face
-    const checkFace = (face: any) => {
+    const checkFace = ( face: DetectSingleFaceTask ) => {
         if( face && canvasRef.current ){
             const canvas = canvasRef.current as HTMLCanvasElement
 
@@ -304,10 +243,10 @@ const useMOTECam = (): MoteCamType => {
 
             if( facePosition.fulfilled && faceSize.fulfilled && faceExp.fulfilled ){
                 // Enough to Shot
-                console.log('Shot Photo');
+                takePhoto()
                 setIsTakenPhoto(true)
                 speakMessage(`${localizedStrings.PICTURE_DID_TAKE}`, languageCode)
-                takePhoto()            
+
             }
         }
     }
@@ -396,7 +335,7 @@ const useMOTECam = (): MoteCamType => {
         const lowRatio = 0.2
         const highRatio = 0.3
         const ratio = faceArea / frameArea
-        console.log(`Face Area Ratio: ${ratio}`);
+        // console.log(`Face Area Ratio: ${ratio}`);
         
     
         let isSufficient = (lowRatio <= ratio && ratio <= highRatio)
@@ -432,7 +371,7 @@ const useMOTECam = (): MoteCamType => {
     // neutral: 0.99961256980896
     // sad: 0.00024136707361321896
     // surprised: 0.000008040878128667828
-    const checkGoodExpression = ( expression: any ): MoteCamAdviceMessage => {
+    const checkGoodExpression = ( expression: PredictSingleFaceExpressionsTask ): MoteCamAdviceMessage => {
     
         const faceExps: FaceExp[] = []
         for (const key in expression) {
@@ -461,7 +400,7 @@ const useMOTECam = (): MoteCamType => {
             expMsg = localizedStrings.GUIDE_MSG_EXP_OTHERS
             break;
         }
-        console.log(expMsg);
+        // console.log(expMsg);
     
         return {
             fulfilled: isGood,
@@ -473,7 +412,7 @@ const useMOTECam = (): MoteCamType => {
     const expectedAge = ( age: number ): MoteCamAdviceMessage => {
         // const ageMsg = `${Math.round(age)}歳くらいに見えますよ`
         const ageMsg = localizedStrings.GUIDE_MSG_AGE_LOOKLIKE.replace('%age', `${Math.round(age)}`)
-        console.log(ageMsg);
+        // console.log(ageMsg);
         return {
             fulfilled: true,
             message: ageMsg
@@ -546,7 +485,7 @@ const useMOTECam = (): MoteCamType => {
                 }
             }
             // @ts-ignore
-            log(`Camera state: ${video.paused ? 'paused' : 'playing'}`);
+            // log(`Camera state: ${video.paused ? 'paused' : 'playing'}`);
         }
     }
 
