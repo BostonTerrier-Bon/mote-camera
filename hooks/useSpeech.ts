@@ -31,7 +31,7 @@ const useSpeech = ( messages: MoteCamAdviceMessage[] ) => {
         if( message !== 'undefined' && typeof speechSynthesis !== 'undefined' 
             && speechSynthesis.speaking === false ){
 
-            speechSynthesis.cancel();//chromeバグ用  
+            speechSynthesis.cancel(); // for chrome bugs
             const utterance = new SpeechSynthesisUtterance();
             utterance.text = message;
             utterance.lang = languageCode;
@@ -42,7 +42,7 @@ const useSpeech = ( messages: MoteCamAdviceMessage[] ) => {
 
 const speakMessage = ( message: string, langCode: string ) => {
 
-  speechSynthesis.cancel();//chromeバグ用  
+  speechSynthesis.cancel(); // for chrome bugs
   const utterance = new SpeechSynthesisUtterance();
   utterance.text = message;
   utterance.lang = langCode;

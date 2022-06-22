@@ -1,5 +1,6 @@
 # Mote Camera
 It is an app that you can easily take pretty awesome photos.
+
 Using these photos, you will be popular in dating apps.
 
 ## Getting Started
@@ -9,18 +10,20 @@ Using these photos, you will be popular in dating apps.
 yarn install
 ```
 
-### Demo
 ```bash
 yarn dev
 ```
 
-### Localization
+## Localization
 
 - en-US
-```http://localhost:3000/en```
+
+  ```http://localhost:3000/en```
 
 - ja-JP
-```http://localhost:3000```
-```http://localhost:3000/ja```
+
+  ```http://localhost:3000```
+
+  ```http://localhost:3000/ja```
 
 

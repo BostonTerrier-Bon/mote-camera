@@ -69,6 +69,7 @@ const useMOTECam = (): MoteCamType => {
 
     // SetUp Tensolflow
     const setupTensorFlow = async () => {
+        // TODO: Types
         // @ts-ignore
         await faceapi.tf.setBackend('webgl');
         // @ts-ignore
@@ -77,22 +78,15 @@ const useMOTECam = (): MoteCamType => {
         await faceapi.tf.ENV.set('DEBUG', false);
         // @ts-ignore
         await faceapi.tf.ready();
-
-        // log(`Version: FaceAPI ${str(faceapi?.version || '(not loaded)')} TensorFlow/JS ${str(faceapi?.tf?.version_core || '(not loaded)')} Backend: ${str(faceapi?.tf?.getBackend() || '(not loaded)')}`);
     }
 
     // Setup Model
     const setupModel = async () => {
-
         await faceapi.nets.tinyFaceDetector.load(MODEL_PATH); // using ssdMobilenetv1
         await faceapi.nets.ageGenderNet.load(MODEL_PATH);
         await faceapi.nets.faceLandmark68Net.load(MODEL_PATH);
         await faceapi.nets.faceRecognitionNet.load(MODEL_PATH);
         await faceapi.nets.faceExpressionNet.load(MODEL_PATH);
-      
-        // check tf engine state
-        // @ts-ignore
-        // log(`Models loaded: ${str(faceapi.tf.engine().state.numTensors)} tensors`);
     }
 
     // Setup Camera
@@ -125,33 +119,23 @@ const useMOTECam = (): MoteCamType => {
                 throw new Error("Camera Error: MediaStream Empty");
             }
             const track = stream.getVideoTracks()[0];
-            // console.log('******* Brightness Check');
-            // console.log(track.getCapabilities());            
             track.applyConstraints(
                 {
                     audio: false,
                 video: {
                     facingMode: 'user',
                     width: {
-                        // ideal: 1280,
                         ideal: 2778,
                     },
                     height: {
-                        // ideal: 1280,
                         ideal: 2778,
                     },
                 },
                 // @ts-ignore
                 advanced : [{ brightness: 50, contrast: 50 }]
             });
-            // ********
-
-            // console.log(applied);
             const constraint = track.getConstraints()
-            // console.log(constraint);
-            // console.log('Brightness Check *************');            
-            //
-            const settings = track.getSettings();
+             const settings = track.getSettings();
             if (settings.deviceId){
                 // Delete property / Release memory indirectly
                 delete settings.deviceId;
@@ -160,7 +144,6 @@ const useMOTECam = (): MoteCamType => {
                 delete settings.groupId;
             }
             if (settings.aspectRatio){
-            //   console.log(`settings.aspectRatio >> ${settings.aspectRatio}`);             
               settings.aspectRatio = Math.trunc(100 * settings.aspectRatio) / 100;
             }
             // Canvas Settings
@@ -168,8 +151,6 @@ const useMOTECam = (): MoteCamType => {
             canvas.height = settings.height ? settings.height : 0
             canvas.style.width = "100%"     
             canvas.style.height = "100%"     
-            // log(`Camera active: ${track.label}`); // ${str(constraints)}
-            // log(`Camera settings: ${str(settings)}`);
           
             video.onloadeddata = async () => {
                 video.play();
@@ -190,15 +171,12 @@ const useMOTECam = (): MoteCamType => {
             const video = videoRef.current as HTMLVideoElement
             if( !video.paused ){
                 const t0 = performance.now();
-                // console.log(`Detect Video W: ${video.width}`);
-                // console.log(`Detect Video H: ${video.height}`);
                 const detectedFace = await faceapi
                                         .detectSingleFace(video, detectorOptions)
                                         .withFaceLandmarks()
                                         .withFaceExpressions()
                                         .withAgeAndGender()
                 const fps = 1000 / (performance.now() - t0);
-                // console.log('Did Detect Video');
                 // Debugging Draw Area
                 showDebuggingRect(detectedFace, fps.toLocaleString(), canvasRef.current)
                 // Check Detected Face
@@ -216,22 +194,22 @@ const useMOTECam = (): MoteCamType => {
         if( face && canvasRef.current ){
             const canvas = canvasRef.current as HTMLCanvasElement
 
-            // // 顔が真ん中にきてるか？
+            // In center?
             const facePosition = checkFaceInCenter(
                 {w:canvas.width, h:canvas.height},
                 face.detection.box
             )
 
-            // 顔のサイズはちょうどよいか？
+            // Is Size just?
             const faceSize = checkFaceSize(
                 {w:canvas.width, h:canvas.height},
                 face.detection.box
             )
 
-            // 表情は？
+            // Expression？
             const faceExp = checkGoodExpression( face.expressions)
 
-            // 年齢
+            // Age?
             const faceAgeMsg = expectedAge( face.age )
 
             setMoteCamAdvice({
@@ -242,7 +220,7 @@ const useMOTECam = (): MoteCamType => {
             })
 
             if( facePosition.fulfilled && faceSize.fulfilled && faceExp.fulfilled ){
-                // Enough to Shot
+                // Enough to shooting
                 takePhoto()
                 setIsTakenPhoto(true)
                 speakMessage(`${localizedStrings.PICTURE_DID_TAKE}`, languageCode)
@@ -251,15 +229,15 @@ const useMOTECam = (): MoteCamType => {
         }
     }
 
-    // Face in the center ?
+    // Is face in the center ?
     const checkFaceInCenter = (frame: {w: number, h: number}, facebox: {x: number, y: number, width: number, height: number}): MoteCamAdviceMessage => {
 
-        // frameの中心
+        // Center of frame
         const frameCenter:{x: number, y: number} = {x: frame.w/2, y: frame.h/2}
-        // あそび
+        // margin
         const cordinator:{w: number, h: number} = { w: 200, h: 200 }
     
-        // 許容される上下左右
+        // Allowable U D L R
         const toleranceRange: {
             left: number,
             right: number,
@@ -272,20 +250,21 @@ const useMOTECam = (): MoteCamType => {
             bottom: frameCenter.y + cordinator.h,
         }
     
-        // 顔の中心
+        // Center of face
         const faceCenter:{x: number, y: number} = {
             x: facebox.x + (facebox.width/2),
             y: facebox.y + (facebox.height/2)
         }
         
-        // 範囲内にあるか判定する
-        // 横方向
+        // Judgements
+        // horizontal
         let horizontal = false
         if( toleranceRange.left < faceCenter.x 
         && faceCenter.x < toleranceRange.right ){
     
             horizontal = true
         }
+        // vertical
         let vertical = false
         if( toleranceRange.top < faceCenter.y
         && faceCenter.y < toleranceRange.bottom ){
@@ -299,7 +278,6 @@ const useMOTECam = (): MoteCamType => {
         const isTooRight = (faceCenter.x > toleranceRange.right)
         const isTooLeft = (faceCenter.x < toleranceRange.left)
     
-        // const msgBox = document.getElementById('face_position');
         let msg = ''
         if( isJust ){
             msg = localizedStrings.GUIDE_MSG_POSITION_GOOD
@@ -311,7 +289,7 @@ const useMOTECam = (): MoteCamType => {
             msg = localizedStrings.GUIDE_MSG_POSITION_TOO_LOWER
         }
     
-        // Canvas左右反転させているので逆
+        // Caz canvas is invered 
         if( isTooRight ){
             msg = localizedStrings.GUIDE_MSG_POSITION_TOO_RIGHT
         }else if( isTooLeft ){
@@ -327,7 +305,7 @@ const useMOTECam = (): MoteCamType => {
     
     // Face Sizing
     const checkFaceSize = (frame: {w: number, h: number}, facebox: {x: number, y: number, width: number, height: number} ): MoteCamAdviceMessage => {
-        // Frame を占める割合で判定する
+        // Judgements by percentage of the frame
         const frameArea = frame.w * frame.h
         const faceArea = facebox.width * facebox.height
     
@@ -335,8 +313,6 @@ const useMOTECam = (): MoteCamType => {
         const lowRatio = 0.2
         const highRatio = 0.3
         const ratio = faceArea / frameArea
-        // console.log(`Face Area Ratio: ${ratio}`);
-        
     
         let isSufficient = (lowRatio <= ratio && ratio <= highRatio)
         let tooSmall = (lowRatio > ratio)
@@ -408,11 +384,9 @@ const useMOTECam = (): MoteCamType => {
         }
     }
 
-    // 年齢
+    // Age
     const expectedAge = ( age: number ): MoteCamAdviceMessage => {
-        // const ageMsg = `${Math.round(age)}歳くらいに見えますよ`
         const ageMsg = localizedStrings.GUIDE_MSG_AGE_LOOKLIKE.replace('%age', `${Math.round(age)}`)
-        // console.log(ageMsg);
         return {
             fulfilled: true,
             message: ageMsg
@@ -420,7 +394,7 @@ const useMOTECam = (): MoteCamType => {
     }
 
     
-    // 撮影実行
+    // Execute taking photo
     const takePhoto = () => {
 
         if( videoRef.current && photoRef.current ){
@@ -442,7 +416,7 @@ const useMOTECam = (): MoteCamType => {
 
             const ctx: CanvasRenderingContext2D = canvasForDraw.getContext('2d')!
     
-            // 反転
+            // Inversion
             ctx.scale(-1,1);
             ctx.translate(-width, 0);
         
@@ -484,8 +458,6 @@ const useMOTECam = (): MoteCamType => {
                     video.pause();
                 }
             }
-            // @ts-ignore
-            // log(`Camera state: ${video.paused ? 'paused' : 'playing'}`);
         }
     }
 
