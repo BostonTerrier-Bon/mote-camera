@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, RefObject } from "react";
 import * as faceapi from '@vladmandic/face-api';
-import { DetectSingleFaceTask } from '@vladmandic/face-api/src/globalApi/DetectFacesTasks';
-import { PredictSingleFaceExpressionsTask } from '@vladmandic/face-api/src/globalApi/PredictFaceExpressionsTask';
-import { MoteCamAdviceType, MoteCamAdviceMessage } from "../component/MoteCamMessage";
+import { CustomDetectedFace } from "../types/CustomDetectedFace";
+import { FaceExpression, FaceExp } from "../types/FaceExpression";
+import { MoteCamAdviceType, MoteCamAdviceMessage } from "../components/MoteCamMessage";
 import { speakMessage } from "../hooks/useSpeech";
 import { useLocale } from "../hooks/useLocale";
 import { showDebuggingRect } from "../logic/debug";
@@ -104,14 +104,20 @@ const useMOTECam = (): MoteCamType => {
             let stream: MediaStream
             try {
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
-            } catch (err: any) {
+            } catch (err) {
+                let errName = ''
                 let msg = ''
-                if (err.name === 'PermissionDeniedError' || err.name === 'NotAllowedError'){
-                    msg = 'camera permission denied';
-                }else if(err.name === 'SourceUnavailableError'){
-                    msg = 'camera not available';
+                if (err instanceof Error) {
+                    if (err.name === 'PermissionDeniedError' || err.name === 'NotAllowedError'){
+                        errName = 'camera permission denied';
+                    }else if(err.name === 'SourceUnavailableError'){
+                        errName = 'camera not available';
+                    }
+                    if( err.message ){
+                        msg = err.message
+                    }
                 }
-                throw new Error(`Camera Error: ${msg}: ${err.message || err}`);                
+                throw new Error(`Camera Error: ${errName}: ${msg.length > 0 ? msg : err}`);
             }
             if( stream ){
                 video.srcObject = stream
@@ -178,7 +184,7 @@ const useMOTECam = (): MoteCamType => {
                                         .withAgeAndGender()
                 const fps = 1000 / (performance.now() - t0);
                 // Debugging Draw Area
-                showDebuggingRect(detectedFace, fps.toLocaleString(), canvasRef.current)
+                // showDebuggingRect(detectedFace, fps.toLocaleString(), canvasRef.current)
                 // Check Detected Face
                 checkFace(detectedFace)
                 // For Performance
@@ -190,26 +196,30 @@ const useMOTECam = (): MoteCamType => {
     }
     
     // Check MOTE Face
-    const checkFace = ( face: DetectSingleFaceTask ) => {
+    const checkFace = ( face: CustomDetectedFace ) => {
         if( face && canvasRef.current ){
             const canvas = canvasRef.current as HTMLCanvasElement
 
-            // In center?
+            // In Center
             const facePosition = checkFaceInCenter(
                 {w:canvas.width, h:canvas.height},
                 face.detection.box
             )
 
-            // Is Size just?
+            // Is Size Just
             const faceSize = checkFaceSize(
                 {w:canvas.width, h:canvas.height},
                 face.detection.box
             )
 
-            // Expression？
+            // Expression
+            // console.log('face.expressions');            
+            // console.log(`${typeof(face.expressions)}`);
+            // console.log(face.expressions);            
+            // console.log(JSON.stringify(face.expressions, null, 4));            
             const faceExp = checkGoodExpression( face.expressions)
 
-            // Age?
+            // Age
             const faceAgeMsg = expectedAge( face.age )
 
             setMoteCamAdvice({
@@ -334,28 +344,16 @@ const useMOTECam = (): MoteCamType => {
         }
     }
     
-    // Expression and Age
-    type FaceExp = {
-        expression: string;
-        predict: number;
-    }
     // Expression
-    // angry: 0.0001337282155873254
-    // disgusted: 3.1885437579148856e-7
-    // fearful: 1.3430851986129255e-9
-    // happy: 0.000003975554136559367
-    // neutral: 0.99961256980896
-    // sad: 0.00024136707361321896
-    // surprised: 0.000008040878128667828
-    const checkGoodExpression = ( expression: PredictSingleFaceExpressionsTask ): MoteCamAdviceMessage => {
+    const checkGoodExpression = ( expression: FaceExpression ): MoteCamAdviceMessage => {
     
         const faceExps: FaceExp[] = []
-        for (const key in expression) {
-        const faceExp: FaceExp = {
-            expression: key,
-            predict: expression[key]
-        }
-        faceExps.push(faceExp)
+        for (const [key, value] of Object.entries(expression)) {
+            const faceExp: FaceExp = {
+                expression: key,
+                predict: value
+            }
+            faceExps.push(faceExp)
         }
         // console.log(faceExps);
         const sorted = faceExps.sort( (prev, current) => {

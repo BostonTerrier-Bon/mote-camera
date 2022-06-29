@@ -1,6 +1,8 @@
-import { DetectSingleFaceTask } from '@vladmandic/face-api/src/globalApi/DetectFacesTasks';
+// import { DetectSingleFaceTask } from '@vladmandic/face-api/src/globalApi/DetectFacesTasks';
+// import { FaceLandmarks68 } from '@vladmandic/face-api/src/classes/FaceLandmarks68'
+import { CustomDetectedFace } from "../types/CustomDetectedFace";
 
-export const showDebuggingRect = (face: DetectSingleFaceTask, fps: string, canvas: HTMLCanvasElement) => {
+export const showDebuggingRect = (face: CustomDetectedFace, fps: string, canvas: HTMLCanvasElement | null) => {
     if( face && canvas ){
         const ctx = canvas.getContext('2d');
         if( ctx ){

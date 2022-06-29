@@ -15,4 +15,5 @@ export default {
     GUIDE_MSG_EXP_NUETRAL: "表情がちょっとかたいです",
     GUIDE_MSG_EXP_OTHERS: "もっとリラックスしてください",
     GUIDE_MSG_AGE_LOOKLIKE: "%age歳くらいに見えますよ",
+    PHOTO_COMPLETION_TITLE: "撮影写真",
 }

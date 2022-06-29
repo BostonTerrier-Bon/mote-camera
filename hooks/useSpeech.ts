@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { MoteCamAdviceMessage } from "../component/MoteCamMessage";
+import { MoteCamAdviceMessage } from "../components/MoteCamMessage";
 import { useLocale } from "../hooks/useLocale";
 
 
@@ -14,7 +14,7 @@ const useSpeech = ( messages: MoteCamAdviceMessage[] ) => {
       })
       if( candidates.length > 0 ){
         const message = selectMessage( candidates )
-        console.log(`Selected Message: ${message}`);
+        // console.log(`Selected Message: ${message}`);
         if( message ){
           speakAdvice( message )
         }

@@ -15,4 +15,5 @@ export default {
     GUIDE_MSG_EXP_NUETRAL: "Face expression is a little serious.",
     GUIDE_MSG_EXP_OTHERS: "Relax a little",
     GUIDE_MSG_AGE_LOOKLIKE: "Look like %age years old",
+    PHOTO_COMPLETION_TITLE: "Completed",
 }

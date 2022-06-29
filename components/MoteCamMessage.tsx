@@ -34,7 +34,7 @@ const MoteCamMessage = ( {
 
     return (
         <Box my={8}>
-            <VStack>
+            <VStack mx={4}>
                 <HStack>
                     <Text>{expression.message}</Text>
                 </HStack>
