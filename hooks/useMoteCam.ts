@@ -245,7 +245,7 @@ const useMOTECam = (): MoteCamType => {
         // Center of frame
         const frameCenter:{x: number, y: number} = {x: frame.w/2, y: frame.h/2}
         // margin
-        const cordinator:{w: number, h: number} = { w: 200, h: 200 }
+        const coordinator:{w: number, h: number} = { w: 200, h: 200 }
     
         // Allowable U D L R
         const toleranceRange: {
@@ -254,10 +254,10 @@ const useMOTECam = (): MoteCamType => {
             top: number,
             bottom: number,  
         } = {
-            left: frameCenter.x - cordinator.w,
-            right: frameCenter.x + cordinator.w,
-            top: frameCenter.y - cordinator.h,
-            bottom: frameCenter.y + cordinator.h,
+            left: frameCenter.x - coordinator.w,
+            right: frameCenter.x + coordinator.w,
+            top: frameCenter.y - coordinator.h,
+            bottom: frameCenter.y + coordinator.h,
         }
     
         // Center of face
@@ -266,7 +266,7 @@ const useMOTECam = (): MoteCamType => {
             y: facebox.y + (facebox.height/2)
         }
         
-        // Judgements
+        // Judgement
         // horizontal
         let horizontal = false
         if( toleranceRange.left < faceCenter.x 
@@ -299,7 +299,7 @@ const useMOTECam = (): MoteCamType => {
             msg = localizedStrings.GUIDE_MSG_POSITION_TOO_LOWER
         }
     
-        // Caz canvas is invered 
+        // Caz canvas is inverted 
         if( isTooRight ){
             msg = localizedStrings.GUIDE_MSG_POSITION_TOO_RIGHT
         }else if( isTooLeft ){
@@ -315,7 +315,7 @@ const useMOTECam = (): MoteCamType => {
     
     // Face Sizing
     const checkFaceSize = (frame: {w: number, h: number}, facebox: {x: number, y: number, width: number, height: number} ): MoteCamAdviceMessage => {
-        // Judgements by percentage of the frame
+        // Judgement by percentage of the frame
         const frameArea = frame.w * frame.h
         const faceArea = facebox.width * facebox.height
     
@@ -368,7 +368,7 @@ const useMOTECam = (): MoteCamType => {
             isGood = true
             break;
         case "neutral":
-            expMsg = localizedStrings.GUIDE_MSG_EXP_NUETRAL
+            expMsg = localizedStrings.GUIDE_MSG_EXP_NEUTRAL
             break;  
         default:
             expMsg = localizedStrings.GUIDE_MSG_EXP_OTHERS
@@ -384,7 +384,7 @@ const useMOTECam = (): MoteCamType => {
 
     // Age
     const expectedAge = ( age: number ): MoteCamAdviceMessage => {
-        const ageMsg = localizedStrings.GUIDE_MSG_AGE_LOOKLIKE.replace('%age', `${Math.round(age)}`)
+        const ageMsg = localizedStrings.GUIDE_MSG_AGE_LOOKALIKE.replace('%age', `${Math.round(age)}`)
         return {
             fulfilled: true,
             message: ageMsg

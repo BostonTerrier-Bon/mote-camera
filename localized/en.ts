@@ -12,8 +12,8 @@ export default {
     GUIDE_MSG_SIZE_TOO_SMALL: "The face is too small. Bring the face closer to the camera.",
     GUIDE_MSG_SIZE_TOO_BIG: "The face is too big. Move away from the camera a little more.",
     GUIDE_MSG_EXP_GOOD: "Good facial expression!",
-    GUIDE_MSG_EXP_NUETRAL: "Face expression is a little serious.",
+    GUIDE_MSG_EXP_NEUTRAL: "Face expression is a little serious.",
     GUIDE_MSG_EXP_OTHERS: "Relax a little",
-    GUIDE_MSG_AGE_LOOKLIKE: "Look like %age years old",
+    GUIDE_MSG_AGE_LOOKALIKE: "Look like %age years old",
     PHOTO_COMPLETION_TITLE: "Completed",
 }

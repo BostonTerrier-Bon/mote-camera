@@ -12,8 +12,8 @@ export default {
     GUIDE_MSG_SIZE_TOO_SMALL: "顔が小さすぎます。もう少しカメラに近づきましょう",
     GUIDE_MSG_SIZE_TOO_BIG: "顔が大きすぎます。もう少しカメラから離れましょう",
     GUIDE_MSG_EXP_GOOD: "良い表情です👍",
-    GUIDE_MSG_EXP_NUETRAL: "表情がちょっとかたいです",
+    GUIDE_MSG_EXP_NEUTRAL: "表情がちょっとかたいです",
     GUIDE_MSG_EXP_OTHERS: "もっとリラックスしてください",
-    GUIDE_MSG_AGE_LOOKLIKE: "%age歳くらいに見えますよ",
+    GUIDE_MSG_AGE_LOOKALIKE: "%age歳くらいに見えますよ",
     PHOTO_COMPLETION_TITLE: "撮影写真",
 }
